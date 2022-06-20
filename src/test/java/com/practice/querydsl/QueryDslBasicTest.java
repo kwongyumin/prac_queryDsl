@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
+import static com.practice.querydsl.model.QMember.member;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
@@ -59,11 +60,11 @@ public class QueryDslBasicTest {
     @Test
     public void startQuerydsl() {
         //컴파일 시점에서 오류를 잡아낼 수 있다.
-        QMember m = new QMember("m");
+        QMember m = member; // QMember member = QMember.member  //static 지정하여 member로 간단히 표현가능 (권장)
         Member findMember = queryFactory
-                .select(m)
-                .from(m)
-                .where(m.username.eq("member1")) //파라미터 바인딩 처리
+                .select(member)
+                .from(member)
+                .where(member.username.eq("member1")) //파라미터 바인딩 처리
                 .fetchOne();
 
         assert findMember != null;
@@ -78,6 +79,34 @@ public class QueryDslBasicTest {
 
 
          */
+
+    }
+
+    @Test // 검색
+    public void search(){
+        Member findMember = queryFactory
+                .selectFrom(member)
+                .where(member.username.eq("member1")
+                        .and(member.age.eq(10)))
+                .fetchOne();
+
+
+        assert findMember != null;
+        assertThat(findMember.getUsername()).isEqualTo("member1");
+
+    }
+
+    @Test // 검색
+    public void searchAndParam(){
+        Member findMember = queryFactory
+                .selectFrom(member)
+                .where(
+                        member.username.eq("member1"),
+                        member.age.between(10,30))  //여러개를 ', ' 나누어도 and와 같음 , 동적쿼리 생성 시 용이함.
+                .fetchOne();
+
+        assert findMember != null;
+        assertThat(findMember.getUsername()).isEqualTo("member1");
 
     }
 }

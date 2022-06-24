@@ -288,4 +288,59 @@ public class QueryDslBasicTest {
                 .containsExactly("teamA","teamB");
     }
 
+
+    /*
+        회원과 팀을 조인하면서 , 팀 이름이 TeamA인 팀만 조인 , 회원은 모두 조회
+        JPQL : select m , t from Member m left join m.team t on t.name = 'teamA'
+
+     */
+
+    @Test
+    public void join_on_filtering(){
+        List<Tuple> result = queryFactory
+                .select(member, team)
+                .from(member)
+                .leftJoin(member.team, team).on(team.name.eq("teamA")) // innerJoin 일 경우 ,on절의 조건을 where 절에 사용할 수도 있다.
+                .fetch();
+
+        for(Tuple tuple : result){
+            System.out.println("tuple ="+tuple);
+        }
+
+    }
+    /*
+        연관관계 없는 엔티티 외부 조인
+        회원의 이름이 팀 이름과 같은 대상 외부 조인
+
+     */
+
+    @Test
+    public void join_on_no_relation(){
+
+        em.persist(new Member("teamA"));
+        em.persist(new Member("teamB"));
+        em.persist(new Member("teamC"));
+
+        List<Tuple> result = queryFactory //모든 회원과 팀 의 테이블을 가져와 조인 시켜 값을 조회하는 방법 , DB가 성능 최적화를 한다.
+                .select(member,team)
+                .from(member)
+                .leftJoin(team).on(member.username.eq(team.name)) // member.team 이 아닌 member를 바로 조인 시킨다.
+                .fetch();
+
+        for(Tuple tuple : result){
+            System.out.println("tuple ="+tuple);
+        }
+
+        assertThat(result)
+                .extracting("username")
+                .containsExactly("teamA","teamB");
+
+        // tt
+
+    }
+
+
+
+
+
 }

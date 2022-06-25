@@ -15,7 +15,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceContext;
+import javax.persistence.PersistenceUnit;
 
 import java.util.List;
 
@@ -335,7 +337,47 @@ public class QueryDslBasicTest {
                 .extracting("username")
                 .containsExactly("teamA","teamB");
 
-        // tt
+
+
+
+    }
+    @PersistenceUnit
+    EntityManagerFactory emf;
+
+    @Test
+    public void fetchJoinNo(){
+        em.flush(); // 영속 컨텍스트에 남아있는 쿼리를 날린다.
+        em.clear(); // 내부 저장소에 캐시를 지운다 .
+
+        Member findMember = queryFactory
+                .selectFrom(member)
+                .where(member.username.eq("member1"))
+                .fetchOne();
+
+
+        assert findMember != null;
+        boolean loaded = emf.getPersistenceUnitUtil().isLoaded(findMember.getTeam()); // 초기화가 된 엔티티인가를 구분 해주는 기능,
+
+        assertThat(loaded).as("패치조인 미적용").isFalse(); // 패치조인이 적용이 안되었을경우 loaded 는 false 값이다.
+
+    }
+
+    @Test
+    public void fetchJoinUse(){
+        em.flush(); // 영속 컨텍스트에 남아있는 쿼리를 날린다.
+        em.clear(); // 내부 저장소에 캐시를 지운다 .
+
+        Member findMember = queryFactory
+                .selectFrom(member)
+                .join(member.team, team).fetchJoin() //멤버 조회시 연관된 팀 엔티티도 한번에 조회함. left , inner 상관 없이 fetchJoin 을 적용가능.
+                .where(member.username.eq("member1"))
+                .fetchOne();
+
+
+        assert findMember != null;
+        boolean loaded = emf.getPersistenceUnitUtil().isLoaded(findMember.getTeam()); // 초기화가 된 엔티티인가를 구분 해주는 기능,
+
+        assertThat(loaded).as("패치조인 적용").isTrue(); // 패치조인이 적용이 안되었을경우 loaded 는 false 값이다.
 
     }
 

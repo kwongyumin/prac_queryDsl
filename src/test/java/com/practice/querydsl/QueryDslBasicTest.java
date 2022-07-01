@@ -524,5 +524,38 @@ public class QueryDslBasicTest {
 
     }
 
+
+    //프로젝션 (select 대상 지정 ) 결과 반환 - 기본
+    @Test
+    public void simpleProjection(){
+
+        List<String> result = queryFactory // 프로젝션 대상이 하나 이기에 타입을 명확하게 지정
+                .select(member.username)
+                .from(member)
+                .fetch();
+
+        for(String s : result){
+            System.out.println("s = " + s);
+        }
+    }
+
+    @Test
+    public void tupleProjection(){
+        List<Tuple> result = queryFactory // 대상이 둘이기에 tuple 사용 or dto로 조회 가능
+                .select(member.username, member.age)
+                .from(member)
+                .fetch();
+
+        for (Tuple tuple : result) {
+            String username = tuple.get(member.username);
+            Integer age = tuple.get(member.age);
+            System.out.println("username=" + username);
+            System.out.println("age=" + age);
+        }
+    }
+
+
+
+
 }
 

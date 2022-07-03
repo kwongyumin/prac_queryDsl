@@ -1,6 +1,8 @@
 package com.practice.querydsl;
 
 
+import com.practice.querydsl.dto.MemberDto;
+import com.practice.querydsl.dto.UserDto;
 import com.practice.querydsl.model.Member;
 import com.practice.querydsl.model.QMember;
 import com.practice.querydsl.model.QTeam;
@@ -8,6 +10,8 @@ import com.practice.querydsl.model.Team;
 
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.Tuple;
+import com.querydsl.core.types.ExpressionUtils;
+import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.JPAExpressions;
@@ -554,6 +558,82 @@ public class QueryDslBasicTest {
         }
     }
 
+    @Test // 순수 JPA 에서는 NEW 명령어 와 패키지 경로를 다 적어줘야하기 때문에 지저분하다..
+    public void findDtoByJPQL(){
+        List<MemberDto> result = em.createQuery("select new com.practice.querydsl.dto.MemberDto(m.username,m.age) from Member m", MemberDto.class)
+                .getResultList();
+
+        for(MemberDto memberDto : result){
+            System.out.println("memberDto =" + memberDto);
+        }
+
+    }
+
+    @Test // 세터를 통한 방법
+    public void findDtoBySetter(){
+        List<MemberDto> result = queryFactory
+                .select(Projections.bean(MemberDto.class,
+                        member.username,
+                        member.age))
+                .from(member)
+                .fetch();
+
+        for(MemberDto memberDto : result){
+            System.out.println("memberDto =" + memberDto);
+        }
+    }
+
+
+    @Test // 필드에 바로 값을 대입하는 방법
+    public void findDtoByField(){
+        List<MemberDto> result = queryFactory
+                .select(Projections.fields(MemberDto.class,
+                        member.username,
+                        member.age))
+                .from(member)
+                .fetch();
+
+        for(MemberDto memberDto : result){
+            System.out.println("memberDto =" + memberDto);
+        }
+    }
+
+    @Test // 앨리어싱을 통해서 필드명이 다를 때 값을 받는 방법 .
+    public void findUserDto(){
+        QMember memberSub = new QMember("memberSub");
+
+        List<UserDto> result = queryFactory
+                .select(Projections.fields(UserDto.class,
+                        member.username.as("name"),// 필드명이 다를 때에는 as 를 사용하여 맞춰준다.
+                        //서브쿼리를 사용하여
+                        //최대나이의 인원만 구한다.
+                        //ExpressionUtils를 사용 ->  age 필드로 감싸서 매칭된다.
+                        ExpressionUtils.as(JPAExpressions
+                                .select(memberSub.age.max())
+                                .from(memberSub),"age")
+                )) // .as 를 사용하여 바로 앨리어싱 하여주는 것이 더 깔끔 :)
+                //서브쿼리 같은 경우는 age 와 같은 방향으로 해결
+                .from(member)
+                .fetch();
+
+        for(UserDto userDto : result){
+            System.out.println("memberDto =" + userDto);
+        }
+    }
+
+    @Test //생성자로 값을 리턴
+    public void findDtoByConstructor(){
+        List<UserDto> result = queryFactory
+                .select(Projections.constructor(UserDto.class,
+                        member.username,
+                        member.age))
+                .from(member)
+                .fetch();
+
+        for(UserDto userDto : result){
+            System.out.println("userDto = "+ userDto);
+        }
+    }
 
 
 

@@ -2,6 +2,7 @@ package com.practice.querydsl;
 
 
 import com.practice.querydsl.dto.MemberDto;
+import com.practice.querydsl.dto.QMemberDto;
 import com.practice.querydsl.dto.UserDto;
 import com.practice.querydsl.model.Member;
 import com.practice.querydsl.model.QMember;
@@ -634,6 +635,23 @@ public class QueryDslBasicTest {
             System.out.println("userDto = "+ userDto);
         }
     }
+
+    @Test
+    public void findDtoByQueryProjection(){    // 프로젝션 생성자와 비슷한 방식이지만 ,컴파일 시점에서 타입이 안맞다면 오류가 난다
+        List<MemberDto> result = queryFactory  //생성자를 그대로 가져간다.
+                .select(new QMemberDto(member.username, member.age))
+                .from(member)
+                .fetch();
+
+        for(MemberDto memberDto : result){
+            System.out.println("memberDto =" + memberDto);
+        }
+
+        // QueryDsl에 대한 의존성에 대해서 생각해보며
+        // 프로젝션 생성자 방식과 쿼리 프로젝션 방식을 선택해서 잘 사용하자.
+
+    }
+
 
 
 

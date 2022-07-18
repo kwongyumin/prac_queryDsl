@@ -722,5 +722,52 @@ public class QueryDslBasicTest {
         return usernameEq(usernameCond).and(ageEq(ageCond));
     }
 
+    //Query
+    @Test
+    public void bulkUpdate(){
+        //member1 = 10  -> 비회원
+        //member2 = 20  -> 비회원
+
+        // 벌크 연산은 영속 컨텍스트에 변경없이 바로 쿼리를 날려버린다.
+        // 즉 , DB 와 애플리케이션 내의 영속컨텍스트의 값이 서로 달라진다.
+        long count = queryFactory
+                .update(member)
+                .set(member.username, "비회원")
+                .where(member.age.lt(28))
+                .execute();
+
+        //벌크 연산에는 영속 컨텍스트에 쿼리를 날려버리고,
+        em.flush();
+        // 초기화 시켜주면된다.
+        em.clear();
+
+        List<Member> result = queryFactory
+                .selectFrom(member)
+                .fetch();
+
+        //값이 일치하는 것을 확인
+        for(Member member : result){
+            System.out.println("member = "+ member);
+        }
+
+    }
+
+    @Test
+    public void bulkAdd(){
+        long count =queryFactory
+                .update(member)
+                .set(member.age , member.age.add(1)) // 곱셈 multifly
+                .execute();
+    }
+
+    @Test
+    public void bulkDelete(){
+        long count =queryFactory
+                .delete(member)
+                .where(member.age.gt(18))
+                .execute();
+    }
+
+
 }
 

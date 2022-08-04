@@ -9,7 +9,6 @@ import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Predicate;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import com.sun.org.apache.xpath.internal.operations.String;
 import org.springframework.stereotype.Repository;
 
 import javax.persistence.EntityManager;
@@ -113,7 +112,6 @@ public class MemberJpaRepository {
                 )
                 .fetch();
     }
-
 
     private BooleanExpression usernameEq(String username) {
         return hasText(username) ? member.username.eq(username): null;
